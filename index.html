@@ -1,1141 +1,880 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Outlet Tracker - Bangladesh</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>কোলগেট স্মাইল হাব - ফর্ম</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Leaflet CSS for map styling -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        colgate: {
-                            red: '#E01933',
-                            dark: '#8E0016',
-                            blue: '#002169',
-                            lightBlue: '#E6F0FA',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['"Open Sans"', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
+    <!-- Google Fonts: Noto Sans Bengali for better Bangla rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Custom CSS for layout and map container */
         body {
-            background-color: #F3F4F6;
-            color: #4B5563;
+            font-family: 'Noto Sans Bengali', 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            /* Blue themed gradient for Colgate Palmolive */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(220, 72%, 90%, 1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(210, 80%, 95%, 1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(230, 80%, 90%, 1) 0, transparent 50%);
+            background-size: cover;
+            min-height: 100vh;
         }
         
-        /* Map Styles */
-        #map {
-            height: 550px; 
-            width: 100%;
-            border-radius: 1rem;
-            z-index: 1;
-            background: #e5e7eb; 
+        /* Custom loading spinner animation */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #2563eb; /* Blue spinner */
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
         }
 
-        /* Minimalistic Input Styles */
-        .min-input {
-            background-color: #FFFFFF;
-            border: 1px solid #E5E7EB;
-            transition: all 0.2s ease;
-        }
-        .min-input:focus {
-            background-color: #FFFFFF;
-            border-color: #E01933;
-            outline: none;
-            box-shadow: 0 0 0 1px #E01933;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        /* Custom Scrollbar (Red Theme) */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background-color: transparent;
-        }
-
-        .leaflet-control-container {
-            visibility: hidden;
+        .input-group:focus-within label {
+            color: #2563eb; /* Blue focus label */
         }
         
-        .invalid-list-item {
-            border-left: 3px solid #E01933;
-            background-color: #FFF1F2;
-        }
-
-        /* KPI Card Styling */
-        .kpi-card {
-            background: white;
-            border: 1px solid #F3F4F6;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-        }
-        .kpi-red::before { background-color: #E01933; }
-        .kpi-blue::before { background-color: #002169; }
-
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Checkbox Styling for Routes */
-        .route-checkbox:checked + div {
-            background-color: #E01933;
-            border-color: #E01933;
-        }
-        .route-checkbox:checked + div svg {
-            display: block;
-        }
-
-        /* Fade in animation */
-        .fade-in {
-            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .input-group:focus-within i {
+            color: #2563eb; /* Blue focus icon */
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start py-8 px-4 md:px-6">
+<body class="flex items-center justify-center p-3 sm:p-4">
 
-    <!-- Main Container -->
-    <div class="w-full max-w-6xl fade-in grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+    <!-- Form Container -->
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300">
         
         <!-- Header -->
-        <div class="lg:col-span-12 mb-2 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-colgate-red tracking-tight leading-none">
-                    ColgateSmile <span class="text-colgate-blue">Hubs</span>
-                </h1>
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide mt-1">Bangladesh Retail Mapping</p>
-            </div>
-             <div id="system-status" class="hidden md:flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                <span id="connection-text" class="text-xs font-bold text-gray-600">Connecting...</span>
+        <div class="bg-blue-600 p-6 sm:p-8 text-center relative overflow-hidden">
+            <!-- Decorative background shape -->
+            <div class="absolute top-0 left-0 w-full h-full bg-blue-700 opacity-20 transform -skew-y-6 origin-top-left"></div>
+            
+            <div class="relative z-10">
+                <h2 class="text-xl sm:text-2xl font-bold text-white">কোলগেট স্মাইল হাব</h2>
+                <p class="text-blue-100 mt-2 text-sm">
+                    নতুন দোকান যুক্ত করার জন্য নিচের ফর্মটি পূরণ করুন
+                </p>
             </div>
         </div>
 
-        <!-- Left Column: Controls (Inputs & Filters) -->
-        <div class="lg:col-span-3 flex flex-col gap-4 h-full">
-
-            <!-- Filters Section -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 shrink-0 relative z-50">
-                <h2 class="text-gray-800 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-colgate-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    Filters
-                </h2>
+        <!-- Form Content -->
+        <div class="p-5 sm:p-8">
+            <form id="customForm" class="space-y-4 sm:space-y-5">
                 
-                <div class="space-y-3">
+                <!-- Hidden Fields to store the split values for backend -->
+                <input type="hidden" name="distributor_code" id="distributor_code">
+                <input type="hidden" name="distributor_name" id="distributor_name">
+                <input type="hidden" name="route_code" id="route_code">
+                <input type="hidden" name="route_name" id="route_name">
+
+                <!-- Field 1: Distributor Dropdown -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        ডিস্ট্রিবিউশন (Distributor) <span class="text-blue-500">*</span>
+                    </label>
                     <div class="relative">
-                        <input type="text" id="search-input" placeholder="Search..." class="min-input w-full pl-8 p-2 rounded-lg text-xs font-medium">
-                        <svg class="w-3 h-3 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    
-                    <select id="filter-area" class="min-input w-full p-2 rounded-lg text-xs text-gray-600"><option value="">All Areas</option></select>
-                    <select id="filter-territory" class="min-input w-full p-2 rounded-lg text-xs text-gray-600"><option value="">All Territories</option></select>
-                    <select id="filter-town" class="min-input w-full p-2 rounded-lg text-xs text-gray-600"><option value="">All Towns</option></select>
-                    
-                    <!-- NEW MULTI-SELECT ROUTE FILTER -->
-                    <div class="relative">
-                        <button id="route-multiselect-btn" class="min-input w-full p-2 rounded-lg text-xs text-gray-600 text-left flex justify-between items-center bg-white cursor-pointer">
-                            <span id="route-btn-text" class="truncate">All Routes</span>
-                            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        
-                        <!-- Dropdown Content -->
-                        <div id="route-dropdown-list" class="hidden absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-60 overflow-y-auto p-2 custom-scrollbar">
-                            <!-- JS will populate checkboxes here -->
-                            <div class="text-xs text-gray-400 text-center py-2">Select Town first</div>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="truck" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <select id="distributorSelect" required
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none appearance-none">
+                            <option value="" disabled selected>ডিস্ট্রিবিউশন সিলেক্ট করুন</option>
+                            <!-- Options populated by JS -->
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400"></i>
                         </div>
                     </div>
-                    
-                    <button id="clear-filters-btn" class="w-full text-[10px] text-gray-400 hover:text-colgate-red transition-colors font-bold uppercase tracking-wider py-1 border-t border-dashed border-gray-200 mt-2">
-                        Reset All
-                    </button>
-                    
-                    <!-- Sync Button -->
-                    <button id="sync-btn" class="w-full mt-4 flex items-center justify-center gap-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-all rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Force Cloud Sync
-                    </button>
-
-                    <!-- Clear Local Button -->
-                    <button id="clear-local-data-btn" class="w-full mt-2 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-all rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
-                        </svg>
-                        Clear Local Cache
-                    </button>
-
-                    <!-- Delete Button -->
-                    <button id="clear-all-data-btn" class="w-full mt-2 flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm group">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-400 group-hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Delete Cloud Data
-                    </button>
                 </div>
-            </div>
-            
-            <!-- CSV Upload Section -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex-1 flex flex-col z-0">
-                <h2 class="text-gray-800 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-wide shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-colgate-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Data Import
-                </h2>
-                
-                <div class="flex-1 flex flex-col justify-center">
-                    <label class="block w-full cursor-pointer hover:bg-gray-50 transition-colors border border-dashed border-gray-300 rounded-lg p-6 text-center h-full flex flex-col items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span class="text-xs font-semibold text-gray-500">Click to Select CSV</span>
-                        <input type="file" id="csv-upload" accept=".csv" class="hidden"/>
+
+                <!-- Field 2: Route Dropdown -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        রুট (Route) <span class="text-blue-500">*</span>
                     </label>
-                    <div id="file-name-display" class="hidden text-[10px] text-colgate-blue font-bold mt-2 text-center truncate"></div>
-
-                    <button id="upload-csv-btn" class="w-full mt-3 bg-colgate-blue text-white py-2 rounded-lg text-xs font-bold hover:bg-blue-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-100" disabled>
-                        UPLOAD DATA
-                    </button>
-                    <p id="upload-status" class="text-[10px] mt-2 text-center text-gray-400 font-medium shrink-0">Req: Lat, Lng, Route, Outlet Name</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Map & Info -->
-        <div class="lg:col-span-9 flex flex-col gap-4 h-full">
-
-            <!-- Top Row: Status Card & KPI Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-                
-                <!-- Status/Info Card -->
-                <div id="info-card" class="bg-colgate-blue rounded-xl p-4 text-white shadow-md flex flex-col justify-center relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 w-16 h-16 bg-white/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                    <h3 id="card-title" class="font-bold text-sm relative z-10">Welcome</h3>
-                    <p id="card-detail" class="text-blue-100 text-xs opacity-80 mt-1 relative z-10 truncate">
-                        Large Data Mode Ready
-                    </p>
-                </div>
-                
-                <!-- KPI 1: Active Outlets -->
-                <div class="kpi-card kpi-red rounded-xl p-4 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Outlets</p>
-                        <h4 id="kpi-outlets" class="text-2xl font-extrabold text-gray-800 mt-0.5">0</h4>
-                    </div>
-                    <div class="h-8 w-8 bg-red-50 rounded-lg flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-colgate-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="map" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <select id="routeSelect" required disabled
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border disabled:bg-gray-100 disabled:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none appearance-none">
+                            <option value="" disabled selected>প্রথমে ডিস্ট্রিবিউশন সিলেক্ট করুন</option>
+                            <!-- Options populated by JS -->
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400"></i>
+                        </div>
                     </div>
                 </div>
 
-                <!-- KPI 2: Route Coverage -->
-                <div class="kpi-card kpi-blue rounded-xl p-4 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Route Coverage</p>
-                        <h4 id="kpi-distance" class="text-2xl font-extrabold text-gray-800 mt-0.5">0 <span class="text-xs font-semibold text-gray-400">km</span></h4>
+                <!-- Field 5: Channel Type -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        চ্যানেল টাইপ (Channel Type) <span class="text-blue-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="shopping-bag" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <select name="channel_type" required
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none appearance-none">
+                            <option value="" disabled selected>চ্যানেল টাইপ সিলেক্ট করুন</option>
+                            <option value="General Stores">General Stores</option>
+                            <option value="Pharmacy">Pharmacy</option>
+                            <option value="Grocery stores">Grocery stores</option>
+                            <option value="Wholesale">Wholesale</option>
+                            <option value="Cosmetic Store">Cosmetic Store</option>
+                            <option value="Modern Trade">Modern Trade</option>
+                            <option value="Others">Others</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400"></i>
+                        </div>
                     </div>
-                    <div class="h-8 w-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-colgate-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
+                </div>
+
+                <!-- Field 6: Outlet Name (English) -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        দোকানের নাম (ইংরেজিতে) <span class="text-blue-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="store" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <input type="text" name="outlet_name_en" required
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none" 
+                            placeholder="Store Name in English">
                     </div>
                 </div>
-            </div>
 
-            <!-- Map Container -->
-            <div class="relative group rounded-xl overflow-hidden shadow-lg border-2 border-white flex-1 flex flex-col">
-                <div id="map" class="flex-1"></div>
-                <!-- Controls overlay -->
-                <div class="absolute bottom-4 left-4 z-[400] bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm text-[10px] text-gray-500 font-bold tracking-wider pointer-events-none">
-                    OUTLET MAPPER v1.0
+                <!-- Field 7: Outlet Name (Bangla) -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        দোকানের নাম (বাংলায়) <span class="text-blue-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="type" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <input type="text" name="outlet_name_bn" required
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none" 
+                            placeholder="দোকানের নাম বাংলায় লিখুন">
+                    </div>
                 </div>
-            </div>
 
-        </div>
+                <!-- Field 8: Owner Name -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        মালিকের নাম (Owner Name) <span class="text-blue-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <input type="text" name="owner_name" required
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none" 
+                            placeholder="মালিকের নাম লিখুন">
+                    </div>
+                </div>
 
-        <!-- Invalid/Outside Region Section -->
-        <div id="invalid-box" class="lg:col-span-12 hidden bg-white border border-red-100 rounded-xl p-4 shadow-sm mt-2">
-            <div class="flex items-center gap-3 mb-3 border-b border-red-100 pb-2">
-                <div class="h-8 w-8 bg-red-50 rounded-full flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-colgate-red" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
+                <!-- Field 9: Owner Mobile -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        মালিকের মোবাইল নাম্বার <span class="text-blue-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="phone" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <input type="tel" name="owner_mobile" required
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none" 
+                            placeholder="01XXXXXXXXX">
+                    </div>
                 </div>
-                <div>
-                    <h3 id="invalid-header" class="text-colgate-red font-bold text-sm uppercase tracking-wide">Data Anomalies</h3>
-                    <p class="text-[10px] text-gray-500">Outlets with coordinates outside Bangladesh (Lat: 20-29, Lng: 86-95)</p>
+
+                <!-- Field 10: Shop Image Upload -->
+                <div class="input-group relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1 transition-colors">
+                        দোকানের ছবি (Shop Image) <span class="text-blue-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="image" class="h-5 w-5 text-gray-400 transition-colors"></i>
+                        </div>
+                        <input type="file" id="shop_image" name="shop_image" required accept="image/*"
+                            class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white text-gray-900 text-base sm:text-sm py-3 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">দোকানের ডিসপ্লের একটি পরিষ্কার ছবি আপলোড করুন।</p>
                 </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-0.5">
+                    <span id="btnText">জমা দিন (Submit)</span>
+                    <div id="btnLoader" class="loader hidden"></div>
+                </button>
+
+            </form>
+
+            <!-- Success Message (Hidden by default) -->
+            <div id="successMessage" class="hidden text-center py-4 animate-fade-in">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                    <i data-lucide="check" class="h-6 w-6 text-green-600"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">সফলভাবে জমা দেওয়া হয়েছে!</h3>
+                <p class="text-sm text-gray-500 mt-2">আমরা আপনার তথ্য পেয়েছি।</p>
+                <button onclick="resetForm()" class="mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium">আরেকটি ফর্ম পূরণ করুন</button>
             </div>
             
-            <!-- Horizontal Scrolling List -->
-            <div id="invalid-list" class="flex gap-3 overflow-x-auto custom-scrollbar pb-2">
-                <!-- List items will be injected here -->
+            <!-- Error Message (Hidden by default) -->
+             <div id="errorMessage" class="hidden text-center py-4 text-red-600 text-sm">
+                কিছু ভুল হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।
             </div>
-        </div>
 
+        </div>
+        
+        <!-- Footer -->
+        <div class="bg-gray-50 px-8 py-4 border-t border-gray-100">
+            <p class="text-xs text-center text-gray-400">কোলগেট স্মাইল হাব প্রোগ্রাম &copy; ২০২৫</p>
+        </div>
     </div>
 
-    <!-- Leaflet JavaScript -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
 
-<script type="module">
-    // --- 1. FIREBASE IMPORTS & SETUP ---
-    // We use the CDN links because this is a standalone HTML file
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-    import { 
-        getFirestore, 
-        collection, 
-        getDocs, 
-        writeBatch, 
-        doc,
-        deleteDoc 
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        const form = document.getElementById('customForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnLoader = document.getElementById('btnLoader');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
 
-    // --- YOUR SPECIFIC CONFIGURATION ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyAmkGBVv9Jfn1Lczatm7gkxef8INmifJCA",
-        authDomain: "colgate-map.firebaseapp.com",
-        projectId: "colgate-map",
-        storageBucket: "colgate-map.firebasestorage.app",
-        messagingSenderId: "1023087510822",
-        appId: "1:1023087510822:web:46be575c04ad29a6612de7",
-        measurementId: "G-P81869T4TX"
-    };
+        const distributorSelect = document.getElementById('distributorSelect');
+        const routeSelect = document.getElementById('routeSelect');
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app); // Analytics initialized
-    const db = getFirestore(app);        // Firestore Database initialized
-    
-    const COLLECTION_NAME = "outlets";
-    
-    // --- 0. INDEXEDDB SETUP (Replaces localStorage for large data) ---
-    const DB_NAME = 'OutletTrackerLocalDB';
-    const STORE_NAME = 'local_cache';
-    const DB_VERSION = 1;
+        // Embedded Data (TSV Format)
+        const rawData = `B002\tTakwa Enterprise\tBDR0000040\tSOLMAID
+B002\tTakwa Enterprise\tBDR0000041\tNORDDA
+B002\tTakwa Enterprise\tBDR0000042\tKURATOLI
+B002\tTakwa Enterprise\tBDR0000043\tBASHUNDHARA
+B002\tTakwa Enterprise\tBDR0000044\tJOARSAHARA
+B002\tTakwa Enterprise\tBDR0000045\tCOKACOLA
+B002\tTakwa Enterprise\tBDR0000046\tKALACHADPUR
+B002\tTakwa Enterprise\tBDR0000047\tAFTAB NAGAR
+B002\tTakwa Enterprise\tBDR0000048\tSOUTH ANONDDA NAGOR
+B002\tTakwa Enterprise\tBDR0000049\tNOTUN BAZAR
+B002\tTakwa Enterprise\tBDR0000050\tMIDDLE BADDA
+B002\tTakwa Enterprise\tBDR0000051\tSHAHAJADPUR 2
+B002\tTakwa Enterprise\tBDR0000052\tKHILBARIRTEK
+B002\tTakwa Enterprise\tBDR0000053\tBHATARA
+B002\tTakwa Enterprise\tBDR0000054\tNURERCHALA
+B002\tTakwa Enterprise\tBDR0000055\tSHAHAJADPUR 1
+B002\tTakwa Enterprise\tBDR0000056\tPOST OFFICE GOLI
+B002\tTakwa Enterprise\tBDR0000057\tWIRELESS GATE
+B002\tTakwa Enterprise\tBDR0000058\tGULSHAN 2
+B002\tTakwa Enterprise\tBDR0000059\tGULSHAN 1
+B002\tTakwa Enterprise\tBDR0000060\tMOHAKHALI BAZAR
+B002\tTakwa Enterprise\tBDR0000061\tBANANI 2
+B002\tTakwa Enterprise\tBDR0000062\tBANANI 1
+B002\tTakwa Enterprise\tBDR0000063\tDOHS
+B002\tTakwa Enterprise\tBDR0000064\tSCHOOL ROAD
+B002\tTakwa Enterprise\tBDR0000065\tGUDARAGHAT 2
+B002\tTakwa Enterprise\tBDR0000066\tSOUTH BADDA
+B002\tTakwa Enterprise\tBDR0000067\tMERUL BADDA
+B002\tTakwa Enterprise\tBDR0000068\tUTTAR BADDA 1
+B002\tTakwa Enterprise\tBDR0000069\tNIKETAN
+B002\tTakwa Enterprise\tBDR0000070\tSOUTH PARA
+B002\tTakwa Enterprise\tBDR0000071\tGUDARAGHAT 1
+B002\tTakwa Enterprise\tBDR0000072\tUTTAR BADDA 2
+B002\tTakwa Enterprise\tBDR0000073\tBERAID
+B002\tTakwa Enterprise\tBDR0000074\tKICHEN MARKET
+B002\tTakwa Enterprise\tBDR0000075\tEAST NAKHALPARA
+B002\tTakwa Enterprise\tBDR0000076\tKARWAN BAZAR
+B002\tTakwa Enterprise\tBDR0000077\tWEST NAKHAL PARA
+B002\tTakwa Enterprise\tBDR0000078\tKUNI PARA
+B002\tTakwa Enterprise\tBDR0000079\tTEJKUNIPARA
+B002\tTakwa Enterprise\tBDR0000080\tSTATION ROAD
+B002\tTakwa Enterprise\tBDR0000082\tSHAHINBAG
+B002\tTakwa Enterprise\tBDR0000083\tCOLONI BAZAR
+B003\tM/S Sanuar Enterprise\tBDR0000084\t24 FUT
+B003\tM/S Sanuar Enterprise\tBDR0000085\tALAMBAG
+B003\tM/S Sanuar Enterprise\tBDR0000086\tASIATIK MARKET
+B003\tM/S Sanuar Enterprise\tBDR0000087\tBIBIR BAGICHA
+B003\tM/S Sanuar Enterprise\tBDR0000088\tCOMISONAR ROAD
+B003\tM/S Sanuar Enterprise\tBDR0000089\tDALKANAGAR
+B003\tM/S Sanuar Enterprise\tBDR0000090\tDHONIYA
+B003\tM/S Sanuar Enterprise\tBDR0000091\tDHUPKHOLA
+B003\tM/S Sanuar Enterprise\tBDR0000092\tFARIDABAD
+B003\tM/S Sanuar Enterprise\tBDR0000093\tFARM ER MOR
+B003\tM/S Sanuar Enterprise\tBDR0000094\tGOBINDOPUR-1
+B003\tM/S Sanuar Enterprise\tBDR0000095\tGOBINDOPUR-2
+B003\tM/S Sanuar Enterprise\tBDR0000096\tJATRABARI
+B003\tM/S Sanuar Enterprise\tBDR0000097\tKAJLA
+B003\tM/S Sanuar Enterprise\tBDR0000098\tKARIM ULLAR BAG
+B003\tM/S Sanuar Enterprise\tBDR0000099\tKONA PARA
+B003\tM/S Sanuar Enterprise\tBDR0000100\tMANIK NAGAR 1
+B003\tM/S Sanuar Enterprise\tBDR0000101\tMANIK NAGAR 2
+B003\tM/S Sanuar Enterprise\tBDR0000102\tMATUAIL-1
+B003\tM/S Sanuar Enterprise\tBDR0000103\tMATUAIL-2
+B003\tM/S Sanuar Enterprise\tBDR0000104\tMERAJ NOGOR-1
+B003\tM/S Sanuar Enterprise\tBDR0000105\tMERAJ NOGOR-2
+B003\tM/S Sanuar Enterprise\tBDR0000106\tMIRHAZIBAG
+B003\tM/S Sanuar Enterprise\tBDR0000107\tMURADPUR
+B003\tM/S Sanuar Enterprise\tBDR0000108\tMUSLIM NOGOR
+B003\tM/S Sanuar Enterprise\tBDR0000109\tNOANAGAR
+B003\tM/S Sanuar Enterprise\tBDR0000110\tNURPUR ROAD
+B003\tM/S Sanuar Enterprise\tBDR0000111\tPATER BUG
+B003\tM/S Sanuar Enterprise\tBDR0000112\tR K MISHION 1
+B003\tM/S Sanuar Enterprise\tBDR0000113\tR K MISHON 2
+B003\tM/S Sanuar Enterprise\tBDR0000114\tRAYER BAG
+B003\tM/S Sanuar Enterprise\tBDR0000115\tROSULPUR
+B003\tM/S Sanuar Enterprise\tBDR0000116\tSATISH SARKAR
+B003\tM/S Sanuar Enterprise\tBDR0000117\tSHAMPUR
+B003\tM/S Sanuar Enterprise\tBDR0000118\tSHEIKHDI
+B003\tM/S Sanuar Enterprise\tBDR0000119\tSHOHID FARUK ROAD
+B003\tM/S Sanuar Enterprise\tBDR0000120\tUTTOR JATRA BARI
+B003\tM/S Sanuar Enterprise\tBDR0000121\tWASHA ROAD
+B003\tM/S Sanuar Enterprise\tBDR0000122\tZIA SHORONI
+B003\tM/S Sanuar Enterprise\tBDR0000123\tZURAIN
+B004\tM/S Hasan Brothers Corporation\tBDR0000170\tBECHARAM DEWRY
+B004\tM/S Hasan Brothers Corporation\tBDR0000171\tBEGUM BAZAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000172\tTAZMOHOL TOWER
+B004\tM/S Hasan Brothers Corporation\tBDR0000173\tMOWLANA MARKET
+B004\tM/S Hasan Brothers Corporation\tBDR0000174\tASRAFABAAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000175\tKAPTAN BAZAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000176\tKAZI ALAUDDIN ROAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000177\tKHOLAMORA
+B004\tM/S Hasan Brothers Corporation\tBDR0000178\tMITFORD
+B004\tM/S Hasan Brothers Corporation\tBDR0000179\tNAYA BAZAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000180\tSTATION ROAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000181\tTATI BAZAR ROAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000182\tGONOK TULI
+B004\tM/S Hasan Brothers Corporation\tBDR0000183\tLALBAG-URDUROAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000184\tMODDHO RASULPUR
+B004\tM/S Hasan Brothers Corporation\tBDR0000185\tNAWABGANJ
+B004\tM/S Hasan Brothers Corporation\tBDR0000186\tAMLIGOLA
+B004\tM/S Hasan Brothers Corporation\tBDR0000187\tRAY SHAHEB BAZAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000188\tRONI MARKET
+B004\tM/S Hasan Brothers Corporation\tBDR0000189\tSECTION
+B004\tM/S Hasan Brothers Corporation\tBDR0000190\tKOILARGHAT
+B004\tM/S Hasan Brothers Corporation\tBDR0000191\tJHAWCHAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000192\tKELLAR MORE
+B004\tM/S Hasan Brothers Corporation\tBDR0000193\tPOLASHI
+B004\tM/S Hasan Brothers Corporation\tBDR0000194\tSHAHID NAGAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000195\tAJIMPUR
+B004\tM/S Hasan Brothers Corporation\tBDR0000196\tBONOLOTA KACHA BAZAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000197\tNEELKHET
+B004\tM/S Hasan Brothers Corporation\tBDR0000198\tNEW MARKET
+B004\tM/S Hasan Brothers Corporation\tBDR0000199\tNEW SUPER MARKET
+B004\tM/S Hasan Brothers Corporation\tBDR0000200\tBORO GRAM
+B004\tM/S Hasan Brothers Corporation\tBDR0000201\tDAYAGONJ BAZAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000202\tFARASGONJ ROAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000203\tISLAM BAGH
+B004\tM/S Hasan Brothers Corporation\tBDR0000204\tMALITOLA ROAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000205\tNAZIM UDDIN ROAD
+B004\tM/S Hasan Brothers Corporation\tBDR0000206\tSUTRAPUR BAZAR
+B004\tM/S Hasan Brothers Corporation\tBDR0000207\tNARINDA
+B004\tM/S Hasan Brothers Corporation\tBDR0000208\tWARI
+B006\tParagon Marketing Limited\tBDR0000351\tRUPNAGAR
+B006\tParagon Marketing Limited\tBDR0000352\tMIRPUR 12 B AND C
+B006\tParagon Marketing Limited\tBDR0000353\tBISHIL
+B006\tParagon Marketing Limited\tBDR0000354\tKALLYANPUR NOTUN BAZ
+B006\tParagon Marketing Limited\tBDR0000355\tGUDARAGHAT
+B006\tParagon Marketing Limited\tBDR0000356\tDOHS
+B006\tParagon Marketing Limited\tBDR0000357\tKALSHI
+B006\tParagon Marketing Limited\tBDR0000358\tDIYA BARI AND KAUNDI
+B006\tParagon Marketing Limited\tBDR0000359\tPALLABI
+B006\tParagon Marketing Limited\tBDR0000360\tALOBDI
+B006\tParagon Marketing Limited\tBDR0000361\tEASTERN HOUSING
+B006\tParagon Marketing Limited\tBDR0000362\tKAZIPARA WEST AND MO
+B006\tParagon Marketing Limited\tBDR0000363\tMOLLA MARKET
+B006\tParagon Marketing Limited\tBDR0000364\tSTADIUM ROAD
+B006\tParagon Marketing Limited\tBDR0000365\tMANIKDI
+B006\tParagon Marketing Limited\tBDR0000366\tVASAN TEK
+B006\tParagon Marketing Limited\tBDR0000367\tSHEWRAPARA EAST
+B006\tParagon Marketing Limited\tBDR0000368\tSHEWRAPARA WEST
+B006\tParagon Marketing Limited\tBDR0000369\tKAFRUL
+B006\tParagon Marketing Limited\tBDR0000370\tKACHUKHET
+B006\tParagon Marketing Limited\tBDR0000371\tBNP BAZAR
+B006\tParagon Marketing Limited\tBDR0000372\tTALTOLA
+B006\tParagon Marketing Limited\tBDR0000373\tMIRPUR 11
+B006\tParagon Marketing Limited\tBDR0000374\tIBRAHIMPUR
+B006\tParagon Marketing Limited\tBDR0000375\tSENPARA
+B006\tParagon Marketing Limited\tBDR0000376\tBALU GHAT
+B006\tParagon Marketing Limited\tBDR0000377\tPIRER BAG AND AMTOLA
+B006\tParagon Marketing Limited\tBDR0000378\tSHAH ALI BAG
+B006\tParagon Marketing Limited\tBDR0000379\tMIRPUR 14
+B006\tParagon Marketing Limited\tBDR0000380\tMATIKATA
+B006\tParagon Marketing Limited\tBDR0000381\tJANATA HOUSING
+B006\tParagon Marketing Limited\tBDR0000382\tSONALI BAZAR
+B006\tParagon Marketing Limited\tBDR0000383\tTOLARBAG
+B006\tParagon Marketing Limited\tBDR0000384\tMIRPUR 6 BAZAR
+B006\tParagon Marketing Limited\tBDR0000385\tZOO ROAD
+B006\tParagon Marketing Limited\tBDR0000386\tKALLYANPUR MAIN ROAD
+B006\tParagon Marketing Limited\tBDR0000387\tDARUS SALAM
+B006\tParagon Marketing Limited\tBDR0000388\tPUROBI MARKET
+B006\tParagon Marketing Limited\tBDR0000389\tMUSLIM BAZAR
+B006\tParagon Marketing Limited\tBDR0000390\tMAZAR ROAD 2
+B006\tParagon Marketing Limited\tBDR0000391\tBOROBAG
+B006\tParagon Marketing Limited\tBDR0000392\tMAZAR ROAD 1
+B006\tParagon Marketing Limited\tBDR0000393\tAHMED NAGAR
+B006\tParagon Marketing Limited\tBDR0000394\tGABTOLI
+B006\tParagon Marketing Limited\tBDR0000395\tMIRPUR A
+B006\tParagon Marketing Limited\tBDR0000396\tMIRPUR C
+B006\tParagon Marketing Limited\tBDR0000397\tMODDHO PAIKPARA
+B006\tParagon Marketing Limited\tBDR0000398\tMIRPUR 12 D AND E
+B006\tParagon Marketing Limited\tBDR0000399\tSHYAMOLI
+B006\tParagon Marketing Limited\tBDR0000400\tKAZIPARA EAST
+B006\tParagon Marketing Limited\tBDR0000401\tFAKIR BARI AND MIRPU
+B006\tParagon Marketing Limited\tBDR0000402\tMIRPUR 13
+B006\tParagon Marketing Limited\tBDR0000403\tPOLASHNAGAR AND BAWN
+B006\tParagon Marketing Limited\tBDR0000404\tBENAROSHI AND AVENUE
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000124\tNOBODOY HOUSING
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000125\tCHANDRIMA HOUSING
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000126\tBOU BAZAR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000127\tHATIR PUL
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000128\tDHAKA UDDAN
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000129\tKOLABAGAN
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000130\tLALMATIA
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000131\tSUKRABAD
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000132\tKATASHUR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000133\tBOSILA
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000134\tCENTRAL ROAD - 1
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000135\tCENTRAL ROAD - 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000136\tHAZARIBAG
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000137\tSEKHER TEK 1
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000138\tSEKHER TEK 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000139\tHAZARIBAG 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000140\tMETRO HOUSING
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000141\tKRISHI MARKET
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000142\tJIGATOLA
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000143\tNURJAHAN ROAD
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000144\tADABOR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000145\tRAYER BAZAR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000146\tDHANMONDI 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000147\tGREEN ROAD 1
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000148\tGREEN ROAD 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000149\tBASH BARI ROAD
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000150\tKRISHI MARKET 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000151\tMONSURABAD
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000152\tRAYER BAZAR 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000153\tELEPHANT ROAD
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000154\tCAMP BAZAR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000155\tSHANKAR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000156\tMONIPURI PARA
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000157\tCOLLEGE GATE
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000158\tTAJMOHOL ROAD
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000159\tCAMP OUTER
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000160\tJAFORABAD
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000161\tKATHAL BAGAN
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000162\tSHYAMOLI
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000163\tDHANMONDI 1
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000164\tEAST RAZA BAZAR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000165\tHOUSING LIMITED
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000166\tTOWN HALL 1
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000167\tTOWN HALL 2
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000168\tWEST RAJA BAZAR
+B007\tM/S Hasan Brothers Corporation 2\tBDR0000169\tHOUSING 2
+B008\tSelf Tech Marketing Ltd\tBDR0000405\tSECTOR 9
+B008\tSelf Tech Marketing Ltd\tBDR0000406\tSECTOR 7
+B008\tSelf Tech Marketing Ltd\tBDR0000407\tAZAMPUR
+B008\tSelf Tech Marketing Ltd\tBDR0000408\tGAWAIR
+B008\tSelf Tech Marketing Ltd\tBDR0000409\tDIA BARI
+B008\tSelf Tech Marketing Ltd\tBDR0000410\tDAKKHIN KHAN
+B008\tSelf Tech Marketing Ltd\tBDR0000411\tISAPURA
+B008\tSelf Tech Marketing Ltd\tBDR0000412\tARICHPUR
+B008\tSelf Tech Marketing Ltd\tBDR0000413\tSECTOR 13
+B008\tSelf Tech Marketing Ltd\tBDR0000414\tSECTOR 10
+B008\tSelf Tech Marketing Ltd\tBDR0000415\tFAYDABAD
+B008\tSelf Tech Marketing Ltd\tBDR0000416\tKHILKHET 1
+B008\tSelf Tech Marketing Ltd\tBDR0000417\tKAMARPARA 1
+B008\tSelf Tech Marketing Ltd\tBDR0000418\tKAMARPARA 2
+B008\tSelf Tech Marketing Ltd\tBDR0000419\tSECTOR 4, 6 & BDR BA
+B008\tSelf Tech Marketing Ltd\tBDR0000420\tST. ROAD,MODHU MITA
+B008\tSelf Tech Marketing Ltd\tBDR0000421\tSECTOR 11 A
+B008\tSelf Tech Marketing Ltd\tBDR0000422\tKUSHOL CENTRE
+B008\tSelf Tech Marketing Ltd\tBDR0000423\tJOYNAL MARKET
+B008\tSelf Tech Marketing Ltd\tBDR0000424\tBAWNIA BAZAR
+B008\tSelf Tech Marketing Ltd\tBDR0000425\tNIKUNJO
+B008\tSelf Tech Marketing Ltd\tBDR0000426\tTONGI BAZAR 1
+B008\tSelf Tech Marketing Ltd\tBDR0000427\tMIL GATE, T&T
+B008\tSelf Tech Marketing Ltd\tBDR0000428\tJOHORA MARKET
+B008\tSelf Tech Marketing Ltd\tBDR0000429\tASHKONA 1
+B008\tSelf Tech Marketing Ltd\tBDR0000430\tASHKONA 2
+B008\tSelf Tech Marketing Ltd\tBDR0000431\tKAWLA
+B008\tSelf Tech Marketing Ltd\tBDR0000432\tKHILKHET 2
+B008\tSelf Tech Marketing Ltd\tBDR0000433\tJHINU MARKET
+B008\tSelf Tech Marketing Ltd\tBDR0000434\tFOKIR MARKET
+B008\tSelf Tech Marketing Ltd\tBDR0000435\tTONGI BAZAR 2
+B008\tSelf Tech Marketing Ltd\tBDR0000436\tKOSHAI BARI
+B008\tSelf Tech Marketing Ltd\tBDR0000437\tFARID MARKET
+B008\tSelf Tech Marketing Ltd\tBDR0000438\tSHA-KABIR MAZAR
+B008\tSelf Tech Marketing Ltd\tBDR0000439\tSECTOR 11 B
+B008\tSelf Tech Marketing Ltd\tBDR0000440\tDOLIPARA
+B008\tSelf Tech Marketing Ltd\tBDR0000441\tSECTOR 12
+B008\tSelf Tech Marketing Ltd\tBDR0000442\tHELAL MARKET
+B008\tSelf Tech Marketing Ltd\tBDR0000443\tTONGI BOU BAZAR
+B008\tSelf Tech Marketing Ltd\tBDR0000444\tJAMAI BAZAR
+B009\tARC Trading\tBDR0000209\tALKARAN ROAD
+B009\tARC Trading\tBDR0000210\tASHRAF ALI ROAD
+B009\tARC Trading\tBDR0000211\tBONGSAL ROAD
+B009\tARC Trading\tBDR0000212\tDC ROAD
+B009\tARC Trading\tBDR0000213\tKAZIR DEWRI
+B009\tARC Trading\tBDR0000214\tKHATUNGONJ
+B009\tARC Trading\tBDR0000215\tMAJHIR GHAT
+B009\tARC Trading\tBDR0000216\tMIA KHAN NAGAR
+B009\tARC Trading\tBDR0000217\tSIRAJUDDOWLA
+B009\tARC Trading\tBDR0000218\tKALAMIA BAZAR
+B009\tARC Trading\tBDR0000219\tDC ROAD 2
+B009\tARC Trading\tBDR0000220\tCHAWKBAZAR
+B009\tARC Trading\tBDR0000221\tBAHAR MARKET
+B009\tARC Trading\tBDR0000222\tBOXIR HAT
+B009\tARC Trading\tBDR0000223\tCHAKTAI
+B009\tARC Trading\tBDR0000224\tPARAMOUNT CITY
+B009\tARC Trading\tBDR0000225\tREAZ UDDIN BAZAR
+B009\tARC Trading\tBDR0000226\tTAMAKUMUNDI LANE
+B009\tARC Trading\tBDR0000227\tBOXIR HAT (2)
+B009\tARC Trading\tBDR0000228\tREAZ UDDIN BAZAR 2
+B009\tARC Trading\tBDR0000229\tCOMMERCE COLLEGE ROA
+B009\tARC Trading\tBDR0000230\tENAYET BAZAR
+B009\tARC Trading\tBDR0000231\tJAMAL KHAN
+B009\tARC Trading\tBDR0000232\tPATHANTULI
+B009\tARC Trading\tBDR0000233\tMADAR BARI
+B009\tARC Trading\tBDR0000234\tASKAR DIGHI
+B009\tARC Trading\tBDR0000235\tNALA PARA
+B009\tARC Trading\tBDR0000236\tCHITTAGONG COLLEGE R
+B009\tARC Trading\tBDR0000237\tCOMMERCE COLLEGE ROA
+B009\tARC Trading\tBDR0000238\tPATHANTULI 2
+B009\tARC Trading\tBDR0000239\tPATHANTULI 3
+B009\tARC Trading\tBDR0000571\tSAMT CHANNEL
+B010\tM/S Farid Enterprise\tBDR0000273\tCHANDINA
+B010\tM/S Farid Enterprise\tBDR0000274\tNEW MARKET
+B010\tM/S Farid Enterprise\tBDR0000275\tYEASIN MARKET
+B010\tM/S Farid Enterprise\tBDR0000276\tNAZRUL AVENUE
+B010\tM/S Farid Enterprise\tBDR0000277\tRAJGANJ 2
+B010\tM/S Farid Enterprise\tBDR0000278\tRAJGANJ 1
+B010\tM/S Farid Enterprise\tBDR0000279\tPOLICE LINE
+B010\tM/S Farid Enterprise\tBDR0000280\tBANGLABAZAR
+B010\tM/S Farid Enterprise\tBDR0000281\tBRAHMANPARA
+B010\tM/S Farid Enterprise\tBDR0000282\tEPZ
+B010\tM/S Farid Enterprise\tBDR0000283\tLALMAI
+B010\tM/S Farid Enterprise\tBDR0000284\tMIYAR BAZAR
+B010\tM/S Farid Enterprise\tBDR0000285\tRANIR BAZAR
+B010\tM/S Farid Enterprise\tBDR0000286\tKAPTAN BAZAR
+B010\tM/S Farid Enterprise\tBDR0000287\tBURICHONG
+B010\tM/S Farid Enterprise\tBDR0000288\tTOMSOM BRIDGE
+B010\tM/S Farid Enterprise\tBDR0000289\tCANTONMENT
+B010\tM/S Farid Enterprise\tBDR0000290\tCOURTBARI
+B010\tM/S Farid Enterprise\tBDR0000291\tMEDICAL ROAD
+B010\tM/S Farid Enterprise\tBDR0000292\tNIMSHAR
+B010\tM/S Farid Enterprise\tBDR0000293\tBISSWA ROAD
+B010\tM/S Farid Enterprise\tBDR0000294\tCHAWK BAZAR
+B010\tM/S Farid Enterprise\tBDR0000295\tMADHAYA
+B012\tP M Traders\tBDR0000445\tANONDIPUR
+B012\tP M Traders\tBDR0000446\tASKARABAD
+B012\tP M Traders\tBDR0000447\tBDR MATH
+B012\tP M Traders\tBDR0000448\tI-BLOCK
+B012\tP M Traders\tBDR0000449\tJHARNA PARA
+B012\tP M Traders\tBDR0000450\tPC ROAD
+B012\tP M Traders\tBDR0000451\tRONGIPARA
+B012\tP M Traders\tBDR0000452\tSHANTIBAG
+B012\tP M Traders\tBDR0000453\tAGRABAD
+B012\tP M Traders\tBDR0000454\tKORNOPHULI
+B012\tP M Traders\tBDR0000455\tA-BLOCK
+B012\tP M Traders\tBDR0000456\tALANGKAR
+B012\tP M Traders\tBDR0000457\tANONDO BAZAR
+B012\tP M Traders\tBDR0000458\tBEPARI PARA
+B012\tP M Traders\tBDR0000459\tDEWANHAT
+B012\tP M Traders\tBDR0000460\tEID GAH
+B012\tP M Traders\tBDR0000461\tFOILLATOLI BAZAR
+B012\tP M Traders\tBDR0000462\tNOYA BAZAR
+B012\tP M Traders\tBDR0000463\tPAHARTOLI COLLEGE RO
+B012\tP M Traders\tBDR0000464\tSABUJBAG
+B012\tP M Traders\tBDR0000465\tSAGORIKA ROAD
+B013\tMadina Traders\tBDR0000466\tBARRISTER COLLEGE
+B013\tMadina Traders\tBDR0000467\tCONTROL MORE
+B013\tMadina Traders\tBDR0000468\tLABOUR COLONY
+B013\tMadina Traders\tBDR0000469\tMAILER MATHA
+B013\tMadina Traders\tBDR0000470\tNOAPARA
+B013\tMadina Traders\tBDR0000471\tPORT MARKET
+B013\tMadina Traders\tBDR0000472\tAIRPORT ROAD
+B013\tMadina Traders\tBDR0000473\tAKMAL ALI
+B013\tMadina Traders\tBDR0000474\tCEMENT CROSSING
+B013\tMadina Traders\tBDR0000475\tGUARD ROOM
+B013\tMadina Traders\tBDR0000476\tKOLSHIR DIGHIR PAR
+B013\tMadina Traders\tBDR0000477\tSTEEL MILL
+B014\tUnitrust Trading Co.\tBDR0000478\tFOKIRAPUL 1
+B014\tUnitrust Trading Co.\tBDR0000479\tFOKIRAPUL 2
+B014\tUnitrust Trading Co.\tBDR0000480\tMOGBAZAR 1
+B014\tUnitrust Trading Co.\tBDR0000481\tNOYA POLTON
+B014\tUnitrust Trading Co.\tBDR0000482\tPURAN POLTON
+B014\tUnitrust Trading Co.\tBDR0000483\tRAMPURA BONOSRI 2
+B014\tUnitrust Trading Co.\tBDR0000484\tSANTIBAG
+B014\tUnitrust Trading Co.\tBDR0000485\tSANTINAGAR
+B014\tUnitrust Trading Co.\tBDR0000486\tGORAN 1
+B014\tUnitrust Trading Co.\tBDR0000487\tGORAN 2
+B014\tUnitrust Trading Co.\tBDR0000488\tBONOSREE 1
+B014\tUnitrust Trading Co.\tBDR0000489\tE BLOCK
+B014\tUnitrust Trading Co.\tBDR0000490\tGULBAG
+B014\tUnitrust Trading Co.\tBDR0000491\tKALIBARI
+B014\tUnitrust Trading Co.\tBDR0000492\tMADERTEK
+B014\tUnitrust Trading Co.\tBDR0000493\tRAMPURA 2
+B014\tUnitrust Trading Co.\tBDR0000494\tSIDDHESHORI 1
+B014\tUnitrust Trading Co.\tBDR0000495\tWAPDA
+B014\tUnitrust Trading Co.\tBDR0000496\tMANDA 1
+B014\tUnitrust Trading Co.\tBDR0000497\tMANDA 2
+B014\tUnitrust Trading Co.\tBDR0000498\tBONOSREE 2
+B014\tUnitrust Trading Co.\tBDR0000499\tDOKKHIN MUGDA
+B014\tUnitrust Trading Co.\tBDR0000500\tKODOMTOLA
+B014\tUnitrust Trading Co.\tBDR0000501\tMODHUBAG
+B014\tUnitrust Trading Co.\tBDR0000502\tMOGBAZAR 2
+B014\tUnitrust Trading Co.\tBDR0000503\tNANDI PARA 1
+B014\tUnitrust Trading Co.\tBDR0000504\tNANDI PARA 2
+B014\tUnitrust Trading Co.\tBDR0000505\tNORTH MUGDA
+B014\tUnitrust Trading Co.\tBDR0000506\tRAMPURA 1
+B014\tUnitrust Trading Co.\tBDR0000507\tULON
+B014\tUnitrust Trading Co.\tBDR0000508\tBASHABO 1
+B014\tUnitrust Trading Co.\tBDR0000509\tHAZIPARA
+B014\tUnitrust Trading Co.\tBDR0000510\tKOMOLAPUR
+B014\tUnitrust Trading Co.\tBDR0000511\tMAYAKANON
+B014\tUnitrust Trading Co.\tBDR0000512\tNOYATOLA
+B014\tUnitrust Trading Co.\tBDR0000513\tSIPAHI BAG 1
+B014\tUnitrust Trading Co.\tBDR0000514\tB BLOCK 1
+B014\tUnitrust Trading Co.\tBDR0000515\tB BLOCK 2
+B014\tUnitrust Trading Co.\tBDR0000516\tC BLOCK 1
+B014\tUnitrust Trading Co.\tBDR0000517\tC BLOCK 2
+B014\tUnitrust Trading Co.\tBDR0000518\tBASHABO 2
+B014\tUnitrust Trading Co.\tBDR0000519\tKHILGAON
+B014\tUnitrust Trading Co.\tBDR0000520\tMALIBAG
+B014\tUnitrust Trading Co.\tBDR0000521\tSIDDHESHORI 2
+B014\tUnitrust Trading Co.\tBDR0000522\tTALTOLA
+B014\tUnitrust Trading Co.\tBDR0000523\tVUIYAPARA
+B014\tUnitrust Trading Co.\tBDR0000524\tMERADIA 1
+B014\tUnitrust Trading Co.\tBDR0000525\tMERADIA 2
+B014\tUnitrust Trading Co.\tBDR0000526\tAGB
+B014\tUnitrust Trading Co.\tBDR0000527\tCHAMELIBAG
+B014\tUnitrust Trading Co.\tBDR0000528\tESKATON
+B014\tUnitrust Trading Co.\tBDR0000529\tRAMPURA BONOSRI 1
+B014\tUnitrust Trading Co.\tBDR0000530\tSHAJAHANPUR
+B014\tUnitrust Trading Co.\tBDR0000531\tSHEGUNBAGICHA
+B014\tUnitrust Trading Co.\tBDR0000532\tTILPA PARA
+B015\tNext Associates\tBDR0000533\t2 NO GATE
+B015\tNext Associates\tBDR0000534\tATURAR DEPOT
+B015\tNext Associates\tBDR0000535\tOXYGEN
+B015\tNext Associates\tBDR0000536\tCOLONEL HUT
+B015\tNext Associates\tBDR0000537\tHIGH LEVEL ROAD
+B015\tNext Associates\tBDR0000538\tSHAHID NAGAR
+B015\tNext Associates\tBDR0000539\tFOUJDARHAT
+B015\tNext Associates\tBDR0000540\tPANCHLAISH
+B015\tNext Associates\tBDR0000541\tPOLYTECHNIC
+B015\tNext Associates\tBDR0000542\tAKBAR SHAH ROAD
+B015\tNext Associates\tBDR0000543\tAL FALAH GOLI
+B015\tNext Associates\tBDR0000544\tBIBIRHAT
+B015\tNext Associates\tBDR0000545\tCHAND MIAH ROAD
+B015\tNext Associates\tBDR0000546\tZAKIR HOSSAIN ROAD
+B015\tNext Associates\tBDR0000547\tRAHATTARPOL
+B015\tNext Associates\tBDR0000548\tFIROZ SHA ABASHIK
+B015\tNext Associates\tBDR0000549\tMOHAMMADPUR
+B015\tNext Associates\tBDR0000550\tBANGLABAZAR
+B015\tNext Associates\tBDR0000551\tSHER SHA
+B015\tNext Associates\tBDR0000552\tGEC
+B015\tNext Associates\tBDR0000553\tKAZIR HAT
+B015\tNext Associates\tBDR0000554\tLALKHAN BAZAR
+B015\tNext Associates\tBDR0000555\tMEDICAL ROAD
+B015\tNext Associates\tBDR0000556\tPAHARTOLI 1
+B015\tNext Associates\tBDR0000557\tPAHARTOLI 2
+B015\tNext Associates\tBDR0000558\tCOSMOPOLITON
+B015\tNext Associates\tBDR0000559\tHAMJARBAG
+B015\tNext Associates\tBDR0000560\tMIRJARPOL
+B015\tNext Associates\tBDR0000561\tMOULOBIBAZAR
+B015\tNext Associates\tBDR0000562\tAMBAGAN
+B015\tNext Associates\tBDR0000563\tBAHADDARHAT
+B015\tNext Associates\tBDR0000564\tARKAN ROAD
+B015\tNext Associates\tBDR0000565\tKHAZA ROAD
+B015\tNext Associates\tBDR0000566\tCHANDGAON RESIDENTIA
+B015\tNext Associates\tBDR0000567\tK B AMAN ALI ROAD
+B015\tNext Associates\tBDR0000568\tBISWA COLONY
+B015\tNext Associates\tBDR0000569\tROSULBAG
+B015\tNext Associates\tBDR0000570\tCNB`;
 
-    const initLocalDB = () => {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-            request.onerror = () => reject("Local DB failed to open");
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME);
+        // Process Data
+        const db = {};
+        const lines = rawData.split('\n');
+        
+        lines.forEach(line => {
+            const parts = line.trim().split('\t');
+            if (parts.length >= 4) {
+                const distCode = parts[0];
+                const distName = parts[1];
+                const routeCode = parts[2];
+                const routeName = parts[3];
+
+                if (!db[distCode]) {
+                    db[distCode] = {
+                        name: distName,
+                        routes: []
+                    };
                 }
-            };
-            request.onsuccess = (event) => resolve(event.target.result);
+                db[distCode].routes.push({
+                    code: routeCode,
+                    name: routeName
+                });
+            }
         });
-    };
 
-    const saveToLocalCache = async (data) => {
-        try {
-            const db = await initLocalDB();
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            store.put(data, 'outlets_data');
+        // Initialize Distributor Dropdown
+        const populateDistributors = () => {
+            distributorSelect.innerHTML = '<option value="" disabled selected>ডিস্ট্রিবিউশন সিলেক্ট করুন</option>';
+            
+            for (const [code, info] of Object.entries(db)) {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = `${info.name} (${code})`;
+                distributorSelect.appendChild(option);
+            }
+        };
+
+        // Event Listener: Distributor Selection
+        distributorSelect.addEventListener('change', function() {
+            const selectedDistCode = this.value;
+            
+            // 1. Update Hidden Fields for Distributor
+            document.getElementById('distributor_code').value = selectedDistCode;
+            document.getElementById('distributor_name').value = db[selectedDistCode].name;
+
+            // 2. Enable and Populate Route Dropdown
+            routeSelect.disabled = false;
+            routeSelect.innerHTML = '<option value="" disabled selected>রুট সিলেক্ট করুন</option>';
+            
+            const routes = db[selectedDistCode].routes;
+            routes.forEach(route => {
+                const option = document.createElement('option');
+                option.value = route.code;
+                option.textContent = `${route.name} (${route.code})`;
+                routeSelect.appendChild(option);
+            });
+            
+            // 3. Clear Route Hidden fields in case user changes distributor but not route
+            document.getElementById('route_code').value = "";
+            document.getElementById('route_name').value = "";
+        });
+
+        // Event Listener: Route Selection
+        routeSelect.addEventListener('change', function() {
+            const selectedRouteCode = this.value;
+            // Find the name for this code within the selected distributor's routes
+            const distCode = distributorSelect.value;
+            const routeObj = db[distCode].routes.find(r => r.code === selectedRouteCode);
+            
+            if (routeObj) {
+                document.getElementById('route_code').value = selectedRouteCode;
+                document.getElementById('route_name').value = routeObj.name;
+            }
+        });
+
+        // Run Initialization
+        populateDistributors();
+
+        // IMPORTANT: Replace this URL with your Google Web App URL after deploying the backend code
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-W_rlJBQs1TQsppacC_wRzsv5RmFEI7Lj4Cc9kS9iKxskLdx2s1r4yKREPwknJo6wGw/exec';
+
+        // Helper function to convert file to Base64 string
+        const fileToBase64 = (file) => {
             return new Promise((resolve, reject) => {
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
             });
-        } catch (e) {
-            console.error("Local Save Error:", e);
-        }
-    };
+        };
 
-    const loadFromLocalCache = async () => {
-        try {
-            const db = await initLocalDB();
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const store = tx.objectStore(STORE_NAME);
-            const request = store.get('outlets_data');
-            return new Promise((resolve) => {
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => resolve(null);
-            });
-        } catch (e) {
-            return null;
-        }
-    };
-
-    const clearLocalCache = async () => {
-        const db = await initLocalDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).clear();
-    };
-
-    // --- GLOBAL VARIABLES ---
-    let map;
-    let markerLayer = L.featureGroup(); 
-    let polylineLayer = L.layerGroup();
-    let allOutlets = [];
-    let selectedRoutes = new Set(); 
-
-    // DOM Elements
-    const infoCard = document.getElementById('info-card');
-    const cardTitle = document.getElementById('card-title');
-    const cardDetail = document.getElementById('card-detail');
-    const invalidBox = document.getElementById('invalid-box');
-    const invalidList = document.getElementById('invalid-list');
-    const invalidHeader = document.getElementById('invalid-header'); 
-    const searchInput = document.getElementById('search-input');
-    const filterArea = document.getElementById('filter-area');
-    const filterTerritory = document.getElementById('filter-territory');
-    const filterTown = document.getElementById('filter-town');
-    const routeBtn = document.getElementById('route-multiselect-btn');
-    const routeList = document.getElementById('route-dropdown-list');
-    const routeBtnText = document.getElementById('route-btn-text');
-    const clearFiltersBtn = document.getElementById('clear-filters-btn');
-    const clearDataBtn = document.getElementById('clear-all-data-btn');
-    const clearLocalBtn = document.getElementById('clear-local-data-btn');
-    const syncBtn = document.getElementById('sync-btn');
-    const csvUpload = document.getElementById('csv-upload');
-    const fileNameDisplay = document.getElementById('file-name-display');
-    const uploadCsvBtn = document.getElementById('upload-csv-btn');
-    const uploadStatus = document.getElementById('upload-status');
-    const kpiOutlets = document.getElementById('kpi-outlets');
-    const kpiDistance = document.getElementById('kpi-distance');
-    const connectionText = document.getElementById('connection-text');
-
-    // --- 2. FIRESTORE FUNCTIONS (Cloud Logic) ---
-
-    // Fetch all data
-    const loadDataFromFirestore = async () => {
-        try {
-            const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-            const data = [];
-            querySnapshot.forEach((doc) => {
-                data.push({ id: doc.id, ...doc.data() });
-            });
-            return data;
-        } catch (error) {
-            console.error("Error getting documents: ", error);
-            throw error;
-        }
-    };
-
-    // Save Data (Batched)
-    const saveDataToFirestore = async (newRecords) => {
-        const BATCH_SIZE = 450; 
-        const chunks = [];
-        
-        for (let i = 0; i < newRecords.length; i += BATCH_SIZE) {
-            chunks.push(newRecords.slice(i, i + BATCH_SIZE));
-        }
-
-        let processedCount = 0;
-
-        for (const chunk of chunks) {
-            const batch = writeBatch(db);
-            chunk.forEach(record => {
-                const newDocRef = doc(collection(db, COLLECTION_NAME));
-                batch.set(newDocRef, record);
-            });
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
             
-            await batch.commit();
-            processedCount += chunk.length;
-            uploadStatus.textContent = `Syncing... (${processedCount} / ${newRecords.length})`;
-        }
-    };
+            // UI Loading State
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
 
-    // Delete All Data (Batched)
-    const clearDataFromFirestore = async () => {
-        const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-        const BATCH_SIZE = 450;
-        const docs = querySnapshot.docs;
-        
-        const chunks = [];
-        for (let i = 0; i < docs.length; i += BATCH_SIZE) {
-            chunks.push(docs.slice(i, i + BATCH_SIZE));
-        }
+            // Collect Data
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
 
-        for (const chunk of chunks) {
-            const batch = writeBatch(db);
-            chunk.forEach(docSnap => {
-                batch.delete(docSnap.ref);
-            });
-            await batch.commit();
-        }
-    };
-
-    // --- 3. APP LOGIC (Updated with Caching) ---
-
-    const updateUIWithData = (data, source) => {
-        if(connectionText) connectionText.textContent = source;
-        
-        if (data.length > 0) {
-            cardTitle.textContent = "Data Loaded";
-            // Updated to allow HTML for the source color coding
-            cardDetail.innerHTML = `${data.length.toLocaleString()} records.<br><span class="text-[10px] ${source.includes('Unsynced') ? 'text-red-300' : 'text-green-300'} opacity-80">Source: ${source}</span>`;
-            
-            const areas = new Set(data.map(d => d.area_name).filter(Boolean));
-            updateSelect(filterArea, areas, filterArea.value);
-            updateCascadingFilters(0);
-        } else {
-            cardTitle.textContent = "No Data";
-            cardDetail.textContent = "Upload a CSV to save data.";
-        }
-    };
-
-    const loadData = async (forceRefresh = false) => {
-        // 1. Try Local Cache First (Quota Saver)
-        if (!forceRefresh) {
-            const cachedData = await loadFromLocalCache();
-            if (cachedData && cachedData.length > 0) {
-                allOutlets = cachedData;
-                console.log("Loaded from local IndexedDB");
-                updateUIWithData(allOutlets, "Local Cache");
-                return; // EXIT EARLY - Do not hit Firestore
-            }
-        }
-
-        // 2. Fetch from Cloud if no cache or forced
-        try {
-            cardDetail.textContent = "Connecting to Cloud...";
-            if(connectionText) connectionText.textContent = "Fetching...";
-            
-            allOutlets = await loadDataFromFirestore();
-            
-            // 3. Save to Cache
-            await saveToLocalCache(allOutlets);
-            
-            updateUIWithData(allOutlets, "Cloud DB");
-
-        } catch (e) {
-            console.error("Firestore Error", e);
-            
-            // QUOTA EXCEEDED HANDLING
-            if (e.code === 'resource-exhausted') {
-                alert("⚠️ Quota Exceeded ⚠️\n\nYou have hit the free tier limit for Firebase reads today.\n\nTrying to load any available cached data...");
-                const cachedData = await loadFromLocalCache();
-                if (cachedData) {
-                    allOutlets = cachedData;
-                    updateUIWithData(allOutlets, "Cache (Quota Limit)");
-                    return;
-                }
-            }
-
-            cardTitle.textContent = "Connection Error";
-            cardDetail.textContent = e.code || "Check console.";
-        }
-    };
-
-    // --- NEW: Handle Sync Button Click ---
-    const handleSyncClick = async () => {
-        // If we have local data, ask if user wants to upload it
-        if (allOutlets.length > 0) {
-            const userChoice = confirm(`You have ${allOutlets.length.toLocaleString()} records loaded locally.\n\n[OK] = Upload these to Cloud Firestore\n[Cancel] = Download fresh data from Cloud`);
-            
-            if (userChoice) {
-                // User chose to UPLOAD
+            // Handle File Upload process
+            const fileInput = document.getElementById('shop_image');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
                 try {
-                    const btn = document.getElementById('sync-btn');
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = "Uploading...";
-                    btn.disabled = true;
-                    
-                    await saveDataToFirestore(allOutlets);
-                    
-                    alert("Successfully uploaded to Cloud!");
-                    updateUIWithData(allOutlets, "Cloud (Synced)");
-                    
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                } catch (e) {
-                    console.error(e);
-                    alert("Upload failed: " + e.message);
-                    document.getElementById('sync-btn').disabled = false;
-                }
-                return;
-            }
-        }
-        
-        // If no local data OR user clicked Cancel, we fetch from cloud
-        loadData(true);
-    };
-
-    const clearLocalDataOnly = async () => {
-        if(!confirm("This will clear data stored in your browser. It will NOT affect Cloud data. Continue?")) return;
-        
-        try {
-            await clearLocalCache();
-            // Just in case anything legacy is left
-            localStorage.removeItem('outlet_tracker_data_v1'); 
-            
-            // Clear memory
-            allOutlets = [];
-            markerLayer.clearLayers();
-            polylineLayer.clearLayers();
-            selectedRoutes.clear();
-            
-            // Reset UI
-            kpiOutlets.textContent = "0";
-            kpiDistance.innerHTML = `0 <span class="text-xs font-semibold text-gray-400">km</span>`;
-            invalidList.innerHTML = '';
-            invalidBox.classList.add('hidden');
-            updateSelect(filterArea, new Set(), "");
-            updateSelect(filterTerritory, new Set(), "");
-            updateSelect(filterTown, new Set(), "");
-            updateRouteMultiSelect(new Set());
-            
-            cardTitle.textContent = "Local Cache Cleared";
-            cardDetail.textContent = "Browser storage empty. Cloud data safe.";
-            if(connectionText) connectionText.textContent = "Disconnected";
-            
-        } catch(e) {
-            console.error(e);
-            alert("Error clearing local data");
-        }
-    };
-
-    const clearAllData = async () => {
-        if(!confirm("WARNING: This will delete ALL data in the Cloud Database. This affects all users. Continue?")) {
-            return;
-        }
-
-        try {
-            const btn = document.getElementById('clear-all-data-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "Deleting...";
-            btn.disabled = true;
-            cardDetail.textContent = "Deleting from Cloud...";
-
-            await clearDataFromFirestore();
-            
-            // Clear local state & cache
-            await clearLocalCache();
-            allOutlets = [];
-            markerLayer.clearLayers();
-            polylineLayer.clearLayers();
-            selectedRoutes.clear();
-            
-            // Reset UI
-            kpiOutlets.textContent = "0";
-            kpiDistance.innerHTML = `0 <span class="text-xs font-semibold text-gray-400">km</span>`;
-            invalidList.innerHTML = '';
-            invalidBox.classList.add('hidden');
-            updateSelect(filterArea, new Set(), "");
-            updateSelect(filterTerritory, new Set(), "");
-            updateSelect(filterTown, new Set(), "");
-            updateRouteMultiSelect(new Set());
-            
-            cardTitle.textContent = "Cleared";
-            cardDetail.textContent = "Database is now empty.";
-            
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            alert("All cloud data has been deleted successfully.");
-            
-        } catch (e) {
-            console.error("Delete Error:", e);
-            alert("Failed to delete data: " + e.message);
-            const btn = document.getElementById('clear-all-data-btn');
-            btn.innerHTML = originalText; 
-            btn.disabled = false;
-        }
-    }
-
-    // --- 4. MAP & UI LOGIC (Standard) ---
-    const initMap = () => {
-        if (typeof L === 'undefined') {
-            document.getElementById('map').innerHTML = '<div class="text-center text-red-500 p-8 text-xs">Map service failed.</div>';
-            return; 
-        }
-
-        const southWest = L.latLng(18.0, 86.0); 
-        const northEast = L.latLng(29.0, 95.0);
-        const bounds = L.latLngBounds(southWest, northEast);
-
-        map = L.map('map', {
-            center: [23.8103, 90.4125],
-            zoom: 7,
-            minZoom: 6,
-            maxBounds: bounds,
-            maxBoundsViscosity: 0.8,
-            zoomControl: false 
-        });
-        
-        L.control.zoom({ position: 'topright' }).addTo(map);
-
-        // --- MAP LAYERS ---
-        const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap',
-            maxZoom: 19
-        }).addTo(map); // Default
-
-        const googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
-            maxZoom: 20,
-            subdomains:['mt0','mt1','mt2','mt3'],
-            attribution: '&copy; Google'
-        });
-
-        const googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
-            maxZoom: 20,
-            subdomains:['mt0','mt1','mt2','mt3'],
-            attribution: '&copy; Google'
-        });
-        
-        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri',
-            maxZoom: 19
-        });
-
-        const baseMaps = {
-            "Standard": osmStandard,
-            "Google Streets": googleStreets,
-            "Google Hybrid": googleHybrid,
-            "Esri Satellite": esriSatellite
-        };
-
-        const overlayMaps = {
-            "Outlets": markerLayer,
-            "Routes": polylineLayer
-        };
-
-        // Add Layer Control to Bottom Right
-        L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(map);
-
-        markerLayer.addTo(map); 
-        polylineLayer.addTo(map);
-
-        document.querySelector('.leaflet-control-container').style.visibility = 'visible';
-        loadData(); 
-    };
-
-    const updateSelect = (selectElement, values, currentValue) => {
-        const oldVal = currentValue || selectElement.value;
-        const firstOption = selectElement.options[0];
-        selectElement.innerHTML = '';
-        selectElement.appendChild(firstOption);
-
-        Array.from(values).sort().forEach(value => {
-            const option = document.createElement('option');
-            option.value = value;
-            option.textContent = value;
-            selectElement.appendChild(option);
-        });
-
-        if (values.has(oldVal)) selectElement.value = oldVal;
-        else selectElement.value = "";
-    };
-
-    const updateRouteMultiSelect = (routesSet) => {
-        routeList.innerHTML = '';
-        selectedRoutes.clear();
-        routeBtnText.textContent = "All Routes";
-
-        if (routesSet.size === 0) {
-            routeList.innerHTML = '<div class="text-xs text-gray-400 text-center py-2">No routes found</div>';
-            return;
-        }
-
-        const sortedRoutes = Array.from(routesSet).sort();
-
-        sortedRoutes.forEach(route => {
-            const label = document.createElement('label');
-            label.className = 'flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer rounded';
-            
-            const input = document.createElement('input');
-            input.type = 'checkbox';
-            input.className = 'route-checkbox hidden'; 
-            input.value = route;
-            
-            const customCheck = document.createElement('div');
-            customCheck.className = 'w-4 h-4 border border-gray-300 rounded flex items-center justify-center bg-white transition-colors';
-            customCheck.innerHTML = `<svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
-
-            const span = document.createElement('span');
-            span.className = 'text-xs text-gray-700';
-            span.textContent = route;
-
-            label.appendChild(input);
-            label.appendChild(customCheck);
-            label.appendChild(span);
-            
-            input.addEventListener('change', (e) => {
-                if (e.target.checked) selectedRoutes.add(e.target.value);
-                else selectedRoutes.delete(e.target.value);
-                
-                if (selectedRoutes.size === 0) routeBtnText.textContent = "All Routes";
-                else if (selectedRoutes.size === 1) routeBtnText.textContent = Array.from(selectedRoutes)[0];
-                else routeBtnText.textContent = `${selectedRoutes.size} Routes Selected`;
-                
-                applyLocalFilters();
-            });
-
-            routeList.appendChild(label);
-        });
-    };
-
-    const updateCascadingFilters = (changedLevel) => {
-        const fArea = filterArea.value;
-        const fTerritory = filterTerritory.value;
-        const fTown = filterTown.value;
-
-        if (changedLevel <= 0) {
-            let areaOutlets = allOutlets;
-            if (fArea) areaOutlets = areaOutlets.filter(d => d.area_name === fArea);
-            const territories = new Set(areaOutlets.map(d => d.territory_name).filter(Boolean));
-            updateSelect(filterTerritory, territories, filterTerritory.value);
-        }
-
-        if (changedLevel <= 1) {
-            let townOutlets = allOutlets;
-            if (filterArea.value) townOutlets = townOutlets.filter(d => d.area_name === filterArea.value);
-            if (filterTerritory.value) townOutlets = townOutlets.filter(d => d.territory_name === filterTerritory.value);
-            const towns = new Set(townOutlets.map(d => d.town_name).filter(Boolean));
-            updateSelect(filterTown, towns, filterTown.value);
-        }
-
-        if (changedLevel <= 2) {
-            let routeOutlets = allOutlets;
-            if (filterArea.value) routeOutlets = routeOutlets.filter(d => d.area_name === filterArea.value);
-            if (filterTerritory.value) routeOutlets = routeOutlets.filter(d => d.territory_name === filterTerritory.value);
-            if (filterTown.value) routeOutlets = routeOutlets.filter(d => d.town_name === filterTown.value);
-            const routes = new Set(routeOutlets.map(d => d.route).filter(Boolean));
-            updateRouteMultiSelect(routes); 
-        }
-        applyLocalFilters();
-    };
-
-    const applyLocalFilters = () => {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const fArea = filterArea.value;
-        const fTerritory = filterTerritory.value;
-        const fTown = filterTown.value;
-
-        const filteredData = allOutlets.filter(item => {
-            if (fArea && item.area_name !== fArea) return false;
-            if (fTerritory && item.territory_name !== fTerritory) return false;
-            if (fTown && item.town_name !== fTown) return false;
-            if (selectedRoutes.size > 0 && !selectedRoutes.has(item.route)) return false;
-
-            if (searchTerm) {
-                const searchString = `${item.outletName} ${item.route} ${item.outlet_code || ''} ${item.town_name || ''}`.toLowerCase();
-                if (!searchString.includes(searchTerm)) return false;
-            }
-            return true;
-        });
-
-        const validMapData = [];
-        const invalidListData = [];
-
-        filteredData.forEach(item => {
-            if (item.lat >= 20 && item.lat <= 29 && item.lng >= 86 && item.lng <= 95) {
-                validMapData.push(item);
-            } else {
-                invalidListData.push(item);
-            }
-        });
-
-        renderMarkers(validMapData);
-        renderInvalidList(invalidListData);
-    };
-
-    const renderMarkers = (dataToRender) => {
-        markerLayer.clearLayers(); 
-        polylineLayer.clearLayers(); 
-        kpiOutlets.textContent = dataToRender.length.toLocaleString();
-
-        // Removed the limit of 2000. Now rendering ALL data.
-        const renderSet = dataToRender;
-
-        // Removed the warning message about limited data since we are showing all.
-
-        renderSet.forEach(data => {
-            const marker = L.circleMarker([data.lat, data.lng], {
-                radius: 5,
-                fillColor: "#E01933", 
-                color: "#FFFFFF",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.9
-            }).addTo(markerLayer);
-
-            marker.bindPopup(`<div style="color:#E01933; font-weight:bold; font-size:12px">${data.outletName}</div><div style="font-size:10px; color:#666">${data.route}</div>`);
-            
-            marker.on('click', () => {
-                let detailHtml = `<span class="opacity-75">Outlet:</span> <b>${data.outletName}</b>`;
-                if(data.route) detailHtml += `<br><span class="opacity-75">Route:</span> <b>${data.route}</b>`;
-                cardTitle.textContent = "Outlet Details";
-                cardDetail.innerHTML = detailHtml;
-            });
-        });
-
-        // Only calculate route lines if we aren't displaying a massive amount of data to prevent browser crash
-        // Increased limit slightly but kept safety check for complex geometry calculations
-        if (dataToRender.length < 5000) {
-            const routeGroups = {};
-            dataToRender.forEach(item => {
-                const routeName = item.route || 'Unassigned';
-                if (!routeGroups[routeName]) routeGroups[routeName] = [];
-                routeGroups[routeName].push(item);
-            });
-
-            let totalMeters = 0;
-            Object.entries(routeGroups).forEach(([route, items]) => {
-                if (items.length < 2) return;
-                
-                // --- OPTIMIZATION: Sort points by Nearest Neighbor to fix zig-zag distance errors ---
-                // This reorders the list to create a logical path instead of following CSV row order
-                const sortedItems = [items[0]];
-                const remaining = items.slice(1);
-                
-                while(remaining.length > 0) {
-                    const last = sortedItems[sortedItems.length - 1];
-                    let nearestIdx = 0;
-                    let minDst = Infinity;
-                    
-                    // Find closest remaining point
-                    for(let i=0; i<remaining.length; i++) {
-                        const dist = Math.pow(last.lat - remaining[i].lat, 2) + Math.pow(last.lng - remaining[i].lng, 2);
-                        if(dist < minDst) {
-                            minDst = dist;
-                            nearestIdx = i;
-                        }
-                    }
-                    sortedItems.push(remaining.splice(nearestIdx, 1)[0]);
-                }
-                
-                const latlngs = sortedItems.map(d => [d.lat, d.lng]);
-
-                for(let i = 0; i < latlngs.length - 1; i++) {
-                    const p1 = L.latLng(latlngs[i]);
-                    const p2 = L.latLng(latlngs[i+1]);
-                    totalMeters += p1.distanceTo(p2);
-                }
-
-                if (latlngs.length > 1) {
-                    L.polyline(latlngs, {
-                        color: '#002169', 
-                        weight: 2,
-                        opacity: 0.5,
-                        dashArray: '4, 4', 
-                        lineJoin: 'round'
-                    }).addTo(polylineLayer).bindPopup(`Route: ${route}`);
-                }
-            });
-            const totalKm = (totalMeters / 1000).toFixed(1);
-            kpiDistance.innerHTML = `${totalKm} <span class="text-xs font-semibold text-gray-400">km</span>`;
-        } else {
-            kpiDistance.innerHTML = `- <span class="text-xs font-semibold text-gray-400">km</span>`;
-        }
-
-        if (renderSet.length > 0) {
-            try {
-                const bounds = markerLayer.getBounds();
-                if (bounds.isValid()) {
-                    map.fitBounds(bounds, { padding: [20, 20], maxZoom: 14 });
-                }
-            } catch (e) { }
-        }
-    };
-
-    const renderInvalidList = (dataList) => {
-        invalidList.innerHTML = ''; 
-        if (dataList.length > 0) {
-            invalidBox.classList.remove('hidden');
-            invalidHeader.textContent = `Data Anomalies (${dataList.length})`;
-            const displayList = dataList.slice(0, 100);
-            displayList.forEach(data => {
-                const item = document.createElement('div');
-                item.className = 'invalid-list-item flex-shrink-0 w-64 bg-red-50 p-2 rounded border border-red-100 text-[10px] text-gray-600';
-                item.innerHTML = `
-                    <div class="font-bold text-gray-800 truncate">${data.outletName}</div>
-                    <div class="flex justify-between mt-1">
-                        <span>Route: ${data.route}</span>
-                        <span class="font-mono text-red-500">${data.lat.toFixed(2)}, ${data.lng.toFixed(2)}</span>
-                    </div>
-                `;
-                invalidList.appendChild(item);
-            });
-        } else {
-            invalidBox.classList.add('hidden');
-        }
-    };
-
-    const clearFilters = () => {
-        searchInput.value = "";
-        filterArea.value = "";
-        filterTerritory.value = "";
-        filterTown.value = "";
-        selectedRoutes.clear();
-        routeBtnText.textContent = "All Routes";
-        document.querySelectorAll('.route-checkbox').forEach(cb => cb.checked = false);
-        updateCascadingFilters(0); 
-    };
-
-    const parseCsv = (csvText) => {
-        const lines = csvText.trim().split('\n');
-        if (lines.length < 2) return { success: false, message: "CSV empty" };
-
-        const rawHeaders = lines[0].trim().replace(/^\uFEFF/, '').split(',').map(h => h.trim());
-        const FIELD_MAPPINGS = {
-            lat: ['Outlet Latitude', 'Latitude', 'lat'],
-            lng: ['Outlet Longitude', 'Longitude', 'lng'],
-            route: ['Route Name', 'route'],
-            outletName: ['Outlet Name', 'outletName']
-        };
-
-        const detectedHeaders = {};
-        for (const [key, aliases] of Object.entries(FIELD_MAPPINGS)) {
-            const found = aliases.find(alias => rawHeaders.includes(alias));
-            if (found) {
-                detectedHeaders[key] = found;
-            } else {
-                return { success: false, message: `Missing: ${aliases.join(' or ')}` };
-            }
-        }
-        
-        const data = [];
-        for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].trim().split(',');
-            if (values.length < rawHeaders.length) continue; 
-            const rawRecord = {};
-            rawHeaders.forEach((header, index) => {
-                rawRecord[header] = values[index] ? values[index].trim() : '';
-            });
-
-            const record = {
-                lat: parseFloat(rawRecord[detectedHeaders.lat]),
-                lng: parseFloat(rawRecord[detectedHeaders.lng]),
-                route: rawRecord[detectedHeaders.route],
-                outletName: rawRecord[detectedHeaders.outletName],
-                timestamp: new Date().toISOString()
-            };
-
-            for (const header of rawHeaders) {
-                const isMapped = Object.values(detectedHeaders).includes(header);
-                if (!isMapped) {
-                    const key = header.toLowerCase().replace(/\s+/g, '_');
-                    record[key] = rawRecord[header];
+                    // Convert file to Base64 before sending
+                    const base64File = await fileToBase64(file);
+                    // Replace the file object with the image data structure
+                    data.shop_image = {
+                        name: file.name,
+                        type: file.type,
+                        data: base64File
+                    };
+                } catch (error) {
+                    console.error("Error converting file:", error);
+                    showError();
+                    return; // Stop submission if file conversion fails
                 }
             }
 
-            if (isNaN(record.lat) || isNaN(record.lng) || !record.route || !record.outletName) continue;
-            data.push(record);
+            // --- REAL SUBMISSION MODE ---
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                mode: 'no-cors' 
+            })
+            .then(() => {
+                showSuccess();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError();
+            });
+        });
+
+        function showSuccess() {
+            form.classList.add('hidden');
+            successMessage.classList.remove('hidden');
+            btnLoader.classList.add('hidden');
+            btnText.classList.remove('hidden');
         }
-        return { success: true, data: data };
-    };
 
-    const handleCsvUpload = async () => {
-        const file = csvUpload.files[0];
-        if (!file) return;
+        function showError() {
+            errorMessage.classList.remove('hidden');
+            btnLoader.classList.add('hidden');
+            btnText.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
 
-        uploadCsvBtn.disabled = true;
-        uploadStatus.textContent = "Parsing CSV...";
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const parseResult = parseCsv(e.target.result);
-            if (!parseResult.success) {
-                uploadStatus.textContent = parseResult.message;
-                uploadCsvBtn.disabled = false;
-                return;
-            }
+        function resetForm() {
+            form.reset();
+            successMessage.classList.add('hidden');
+            form.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            errorMessage.classList.add('hidden');
             
-            uploadStatus.textContent = `Processing ${parseResult.data.length.toLocaleString()} records locally...`;
-            
-            try {
-                // MODIFIED: Only save locally, DO NOT upload to Firestore yet
-                allOutlets = parseResult.data;
-                
-                // Save to IndexedDB (Reliable storage)
-                await saveToLocalCache(allOutlets);
-                
-                updateUIWithData(allOutlets, "Local (Unsynced)");
-                
-                uploadStatus.textContent = "Saved to Browser. Click 'Force Cloud Sync' to Upload.";
-                csvUpload.value = '';
-                fileNameDisplay.classList.add('hidden');
-                
-                // Re-enable button
-                setTimeout(() => { 
-                    uploadCsvBtn.disabled = false;
-                }, 1000);
-                
-            } catch (e) {
-                console.error(e);
-                uploadStatus.textContent = "Local Save Failed";
-                uploadCsvBtn.disabled = false;
-            }
-        };
-        reader.readAsText(file);
-    };
-    
-    csvUpload.addEventListener('change', () => {
-        if (csvUpload.files.length > 0) {
-            uploadCsvBtn.disabled = false;
-            fileNameDisplay.textContent = csvUpload.files[0].name;
-            fileNameDisplay.classList.remove('hidden');
-            uploadStatus.textContent = "Ready to upload";
+            // Reset dropdowns
+            distributorSelect.value = "";
+            routeSelect.innerHTML = '<option value="" disabled selected>প্রথমে ডিস্ট্রিবিউশন সিলেক্ট করুন</option>';
+            routeSelect.disabled = true;
         }
-    });
-
-    uploadCsvBtn.addEventListener('click', handleCsvUpload);
-    syncBtn.addEventListener('click', handleSyncClick);
-    
-    searchInput.addEventListener('input', applyLocalFilters);
-    filterArea.addEventListener('change', () => updateCascadingFilters(0));
-    filterTerritory.addEventListener('change', () => updateCascadingFilters(1));
-    filterTown.addEventListener('change', () => updateCascadingFilters(2));
-    
-    routeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        routeList.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!routeBtn.contains(e.target) && !routeList.contains(e.target)) {
-            routeList.classList.add('hidden');
-        }
-    });
-    
-    clearFiltersBtn.addEventListener('click', clearFilters);
-    if(clearLocalBtn) clearLocalBtn.addEventListener('click', clearLocalDataOnly);
-    clearDataBtn.addEventListener('click', clearAllData);
-    document.addEventListener('DOMContentLoaded', initMap);
-
-</script>
+    </script>
+</body>
+</html>
